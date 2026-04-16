@@ -1,4 +1,5 @@
 from app.data import store
+from app.data.store import hash_password
 from app.models.user import UserCreate, UserUpdate
 
 
@@ -11,7 +12,9 @@ def get_user(user_id: int) -> dict | None:
 
 
 def create_user(data: UserCreate) -> dict:
-    user = {"id": store.next_user_id, **data.model_dump()}
+    fields = data.model_dump()
+    fields["password"] = hash_password(fields["password"])
+    user = {"id": store.next_user_id, **fields}
     store.users[store.next_user_id] = user
     store.next_user_id += 1
     return user
