@@ -8,6 +8,11 @@ dependencies = [
     "uvicorn[standard]>=0.34",
     "pyjwt>=2.9",
     "bcrypt>=4.2",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncmy>=0.2.9",
+    "cryptography>=42.0",
+    "motor>=3.4",
+    "aiokafka>=0.10",
 ]
 
 [tool.hatch.build.targets.wheel]

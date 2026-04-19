@@ -9,7 +9,7 @@ class ProductBase(BaseModel):
 
 
 class ProductCreate(ProductBase):
-    pass
+    stock: int = 0
 
 
 class ProductUpdate(BaseModel):
@@ -17,7 +17,9 @@ class ProductUpdate(BaseModel):
     description: str | None = None
     price: float | None = None
     in_stock: bool | None = None
+    stock: int | None = None
 
 
 class Product(ProductBase):
     id: int
+    stock: int

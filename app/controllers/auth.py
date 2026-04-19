@@ -1,32 +1,32 @@
 from datetime import datetime, timedelta, timezone
 
 import jwt
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.data import store
-from app.data.store import verify_password
-
-SECRET_KEY = "demo-secret-key-change-in-production"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+from app.config import settings
+from app.models.db.user import User
+from app.security import verify_password
 
 
-def authenticate(email: str, password: str) -> dict | None:
-    for user in store.users.values():
-        if user["email"] == email:
-            if verify_password(password, user["password"]):
-                return user
-            return None
-    return None
+async def authenticate(session: AsyncSession, email: str, password: str) -> dict | None:
+    result = await session.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+    if user is None:
+        return None
+    if not verify_password(password, user.password):
+        return None
+    return {"id": user.id, "name": user.name, "email": user.email, "age": user.age}
 
 
 def create_access_token(user_id: int, email: str) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
     payload = {"sub": email, "user_id": user_id, "exp": expire}
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
 def decode_access_token(token: str) -> dict | None:
     try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
     except jwt.PyJWTError:
         return None
